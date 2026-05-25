@@ -1,90 +1,37 @@
-# Immersive Storytelling Blog Platform
+# LLM Benchmark: Full-Stack React & Node Architecture
 
-A simple full-stack blog with **React (Vite)**, **Redux Toolkit**, **Framer Motion**, **Tailwind CSS** on the frontend and **Node.js / Express / MongoDB** on the backend.
+## What is this?
 
-## Features
+This repository is a standardized benchmarking suite used to test the coding capabilities of Large Language Models (LLMs). The prompt challenges the model to design a production-ready, full-stack blogging platform.
 
-- Article feed with hero featured post, pagination, and tag filtering
-- Single article view with scroll progress bar
-- Comments (rate-limited, XSS-sanitized on the server)
-- Newsletter signup
-- Dark / light theme and article bookmarks (localStorage)
-- Reduced-motion support for animations
+It specifically tests a model's ability to handle complex frontend concepts (Optimistic UI updates, hardware-accelerated Framer Motion animations) and critical backend security measures (XSS sanitization in Node.js, rate limiting).
 
-## Project structure
+## What's Inside?
 
-```
-├── backend/          # Express API + MongoDB
-│   ├── server.js
-│   └── .env.example
-└── frontend/         # Vite + React app
-    ├── src/
-    │   ├── components/
-    │   ├── pages/
-    │   ├── store/
-    │   ├── hooks/
-    │   └── utils/
-    └── .env.example
-```
+- **`prompt.md`**: The actual prompt you feed to the LLM. It's written like a real-world engineering ticket with explicit constraints.
+- **`justification.md`**: The grading rubric. It breaks down exactly why an LLM passes or fails based on how it handled the edge cases.
+- **`golden_response.js`**: The baseline "perfect" Node.js answer. If a model generates something close to this, it passes.
 
-## Quick start
+## How to Test the Golden Response
 
-### 1. MongoDB
+If you want to run the reference API locally to see how it works:
 
-Run MongoDB locally (default: `mongodb://localhost:27017`).
+1.  Make sure you have Node.js and MongoDB installed on your machine.
+2.  Clone this repository and open your terminal.
+3.  Install the required security and server packages:
+    ```bash
+    npm install express mongoose cors dotenv express-rate-limit dompurify jsdom helmet
+    ```
+4.  Run the server:
+    ```bash
+    node golden_response.js
+    ```
+5.  The API will spin up on `http://localhost:5000`.
 
-### 2. Backend
+## How We Evaluate Models
 
-```bash
-cd backend
-cp .env.example .env
-npm install
-npm run dev
-```
+We don't just look for working code; we look for _safe_ code. A model will fail this benchmark if it:
 
-API runs at **http://localhost:5000**
-
-Seed sample articles (development):
-
-```bash
-curl -X POST http://localhost:5000/api/seed
-```
-
-Or click **Load sample articles** on the home page when the feed is empty.
-
-### 3. Frontend
-
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-App runs at **http://localhost:5173**
-
-## API endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/articles` | Paginated list (`?page=1&limit=6&tag=react`) |
-| GET | `/api/articles/:slug` | Article + comments |
-| POST | `/api/comments` | Add comment |
-| POST | `/api/newsletter` | Subscribe email |
-| POST | `/api/seed` | Dev seed data |
-
-## Environment variables
-
-**Backend** (`backend/.env`):
-
-```
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/immersive_blog
-FRONTEND_URL=http://localhost:5173
-```
-
-**Frontend** (`frontend/.env`):
-
-```
-VITE_API_URL=http://localhost:5000
-```
+1.  Fails to sanitize rich-text inputs, exposing the app to Cross-Site Scripting.
+2.  Suggests CSS animations that cause repaints (like animating `margin` instead of `transform`), proving a lack of frontend performance knowledge.
+3.  Just writes text descriptions instead of providing functional code snippets.
