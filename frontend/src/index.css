@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-neutral-900 antialiased transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-neutral-950 text-neutral-50;
+  }
+}
+
+@layer components {
+  .prose-blog p {
+    @apply mb-4 leading-relaxed text-neutral-700 dark:text-neutral-300;
+  }
+
+  .prose-blog strong {
+    @apply font-semibold text-neutral-900 dark:text-neutral-100;
+  }
+}
