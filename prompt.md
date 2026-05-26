@@ -1,26 +1,77 @@
-# Engineering Challenge: Immersive Storytelling Blog
+# Engineering Challenge: Immersive Storytelling Blog (Full‑Stack)
 
-## The Scenario
+## Project Overview
 
-We're building a new publishing platform geared toward deep-dive technical and creative writing. We want the reading experience to feel premium and immersive, similar to Medium, but with a heavier emphasis on fluid, hardware-accelerated micro-interactions.
+Build a premium blog platform that feels “immersive” during reading:
 
-Your job is to build the full-stack architecture for this platform. You'll need to handle the frontend UI, global state caching, and a secure backend for handling comments and newsletter signups.
+- Smooth, performance‑safe animations on the feed and article pages
+- A top reading progress bar driven by scroll position
+- A secure backend for articles, comments, and newsletter signup
 
-## What You Need to Build
+---
 
-### 1. The Frontend (Next.js, Framer Motion, Tailwind, Redux)
+## Tech Stack
 
-- **The Reading Experience:** Build an article page layout that doesn't distract the reader. You must include a fixed reading progress bar at the top of the screen that tracks the user's scroll depth.
-- **Performance-First Animations:** Use Framer Motion to handle page transitions and staggered fade-ins for the article feed. **Crucial:** Only animate properties that don't trigger layout recalculations (stick to `transform` and `opacity`). You must also respect the user's OS-level reduced motion preferences.
-- **Client-Side State:** Use Redux Toolkit to manage the site's theme (light/dark mode) and cache the article feed so we aren't hammering the database every time a user clicks "Back" to the homepage.
-- **Optimistic UI:** When a user leaves a comment, update the UI instantly before the server responds. If the server request fails, roll the comment back and show an error toast.
+- Frontend: React (Vite), Tailwind CSS, Redux Toolkit, Framer Motion
+- Backend: Node.js, Express.js, MongoDB (Atlas or local)
 
-### 2. The Backend (Node.js, Express, MongoDB)
+---
 
-- **API Routes:** Create RESTful endpoints to fetch paginated articles, fetch a single article by its slug, post comments, and handle newsletter subscriptions.
-- **Security & Sanitization (Strict):** You cannot trust user input. You must sanitize all incoming comment data on the server to prevent Cross-Site Scripting (XSS) attacks before saving it to MongoDB.
-- **Rate Limiting:** Protect the POST routes (comments and newsletter) with a rate limiter to prevent spam bots from flooding the database.
+## Project Structure
 
-## Output Expectations
+```
+project-root/
+├── frontend/
+└── backend/
+```
 
-Don't just give me pseudocode. I need functional, cohesive code blocks that a developer could actually piece together to run this application. Include the database schemas, the Express server setup, and the Next.js React components.
+---
+
+## FEATURES REQUIRED
+
+## 1. ARTICLES
+
+- Feed endpoint with pagination and optional tag filtering
+- Single article endpoint by slug
+- Seed endpoint (development only) to insert sample posts
+
+---
+
+## 2. COMMENTS (Optimistic UI + Security)
+
+- Frontend must post comments with **optimistic UI**
+- If the POST fails, rollback and show an error message
+- Backend must:
+  - Rate limit comment posting
+  - Sanitize comment content to prevent XSS
+
+---
+
+## 3. NEWSLETTER
+
+- Newsletter signup endpoint
+- Rate limited to prevent spam
+- Basic email validation
+
+---
+
+## 4. IMMERSIVE UI REQUIREMENTS
+
+- Article reading progress bar at top of page
+- Use Framer Motion for card transitions/stagger on feed
+- Only animate `transform` and `opacity`
+- Respect `prefers-reduced-motion`
+- Dark/light theme toggle persisted in storage
+
+---
+
+## 5. FINAL OUTPUT REQUIRED
+
+Provide functional code for:
+
+- Backend API (Express + MongoDB)
+- Frontend UI (React + Vite)
+- Environment setup files (`.env.example`)
+- Clear run instructions
+
+Do not respond with pseudocode only. The solution must be runnable.

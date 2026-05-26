@@ -1,37 +1,125 @@
-# LLM Benchmark: Full-Stack React & Node Architecture
+# Immersive Storytelling Blog
 
-## What is this?
+A full-stack blog platform with an immersive reading experience (progress bar + motion-friendly UI) and a secure API for comments and newsletter signup.
 
-This repository is a standardized benchmarking suite used to test the coding capabilities of Large Language Models (LLMs). The prompt challenges the model to design a production-ready, full-stack blogging platform.
+---
 
-It specifically tests a model's ability to handle complex frontend concepts (Optimistic UI updates, hardware-accelerated Framer Motion animations) and critical backend security measures (XSS sanitization in Node.js, rate limiting).
+## Project Structure
 
-## What's Inside?
+```
+immersive-blog/
+├── backend/                  # Node.js + Express + MongoDB API
+│   ├── server.js
+│   ├── package.json
+│   └── .env.example
+│
+└── frontend/                 # React (Vite) UI
+    ├── src/
+    ├── package.json
+    └── .env.example
+```
 
-- **`prompt.md`**: The actual prompt you feed to the LLM. It's written like a real-world engineering ticket with explicit constraints.
-- **`justification.md`**: The grading rubric. It breaks down exactly why an LLM passes or fails based on how it handled the edge cases.
-- **`golden_response.js`**: The baseline "perfect" Node.js answer. If a model generates something close to this, it passes.
+---
 
-## How to Test the Golden Response
+## Tech Stack
 
-If you want to run the reference API locally to see how it works:
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React + Vite, Tailwind CSS, Redux Toolkit, Framer Motion |
+| Backend | Node.js, Express.js |
+| Database | MongoDB (Atlas or local) |
+| Security | Rate limiting + server-side XSS sanitization |
 
-1.  Make sure you have Node.js and MongoDB installed on your machine.
-2.  Clone this repository and open your terminal.
-3.  Install the required security and server packages:
-    ```bash
-    npm install express mongoose cors dotenv express-rate-limit dompurify jsdom helmet
-    ```
-4.  Run the server:
-    ```bash
-    node golden_response.js
-    ```
-5.  The API will spin up on `http://localhost:5000`.
+---
 
-## How We Evaluate Models
+## Features
 
-We don't just look for working code; we look for _safe_ code. A model will fail this benchmark if it:
+- **Article feed** — featured hero + grid, pagination, tag filter
+- **Article view** — reading progress bar, bookmarks, comments
+- **Comments** — optimistic UI (frontend) + rate limited + sanitized (backend)
+- **Newsletter** — signup endpoint with rate limiting
+- **Theme** — light/dark with persistence
 
-1.  Fails to sanitize rich-text inputs, exposing the app to Cross-Site Scripting.
-2.  Suggests CSS animations that cause repaints (like animating `margin` instead of `transform`), proving a lack of frontend performance knowledge.
-3.  Just writes text descriptions instead of providing functional code snippets.
+---
+
+## Prerequisites
+
+- Node.js 18+
+- MongoDB (local) or MongoDB Atlas
+
+---
+
+## Quick Start
+
+### 1) Backend
+
+```bash
+cd backend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+API runs at `http://localhost:5000`.
+
+Seed sample articles (development):
+
+```bash
+curl -X POST http://localhost:5000/api/seed
+```
+
+### 2) Frontend
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Vite runs at the URL it prints (usually `http://localhost:5173`).
+
+---
+
+## API Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/articles?page=1&limit=6&tag=react` | Paginated feed (optional tag) |
+| GET | `/api/articles/:slug` | Single article + comments |
+| POST | `/api/comments` | Add comment (rate limited + sanitized) |
+| POST | `/api/newsletter` | Newsletter signup (rate limited) |
+| POST | `/api/seed` | Seed sample articles (dev only) |
+
+---
+
+## Environment Variables
+
+Backend (`backend/.env`):
+
+```env
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/immersive_blog
+FRONTEND_URL=http://localhost:5173
+NODE_ENV=development
+```
+
+Frontend (`frontend/.env`):
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+---
+
+## Build Guide (step-by-step)
+
+See `BUILD_GUIDE.md`.
+
+---
+
+## Security Notes
+
+- Never commit `.env` secrets
+- Keep rate limits enabled on write endpoints
+- Always sanitize untrusted text before storing or rendering
