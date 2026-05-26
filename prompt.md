@@ -64,7 +64,7 @@ project-root/
 
 ---
 
-## Evaluation Dimensions (Must Be Covered)
+## Evaluation Dimensions
 
 Your solution will be evaluated on these 7 dimensions:
 
