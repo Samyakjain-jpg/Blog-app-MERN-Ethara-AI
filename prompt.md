@@ -1,74 +1,145 @@
-# Immersive Storytelling Blog - Engineering Brief
+# Immersive Storytelling Blog — Engineering Brief
 
-You are developing a fully-realized stack blog application, consisting of a front end React-based reading experience and an Express API back end, utilizing MongoDB for storage. This should be an intuitive experience for people who browse and read an extensive story—no mockups or power point slides here!
+Design a real full stack blog, where users read articles from the browser window, while articles themselves, comments on them, and subscriptions to newsletters are stored in a database accessed via an API. Everything should be simple and straightforward—the only motion used should support reading.
 
-## What we want the product to do
+---
 
-Readers get a home feed with pagination and optional tag filters, an article page with a scroll-linked progress indicator at the top, and a comment box that feels instant. Writers (or devs seeding data) need a way to load sample posts in development. Visitors can sign up for a newsletter. Light and dark theme should stick between visits.
+## Product goals (what and why)
 
-Motion matters, but only where it helps: staggered card entrances on the feed, smooth progress on the article view. Stick to `transform` and `opacity` so the browser is not fighting layout on every frame. If the user has reduced motion enabled at the OS level, tone the animation down or skip it.
+| Goal | Why it matters |
+|------|----------------|
+| Home feed with pages and tags | Readers discover content in chunks; tags group topics without separate “category sites.” |
+| Article page with scroll progress | Long posts need a sense of place; a thin top bar answers “how much is left?” without cluttering the text. |
+| Comments that feel instant | Waiting on the network after every submit feels broken; the UI should update first, then confirm with the server. |
+| Newsletter signup | Capture interest without accounts; email is enough for a simple list. |
+| Light / dark theme that persists | Reading at night is common; the choice should survive refresh. |
+| Dev-only seed data | New clones of the repo should show content immediately, without manual DB inserts. |
 
-## Stack and layout
+**Movement rules:** apply staggered entrance effects to the feed, and a smooth progress animation to the articles. Limit animations to `transform` and `opacity` transitions so that no reflow occurs on every transition frame. Respect `prefers-reduced-motion`, which will request the reduction of any movement effects if needed by the user.
 
-| Layer | Use                                                     |
-| ----- | ------------------------------------------------------- |
-| UI    | React with Vite, Tailwind, Redux Toolkit, Framer Motion |
-| API   | Node, Express                                           |
-| Data  | MongoDB (local or Atlas)                                |
+---
+
+## Why this stack
+
+### React (UI library)
+
+React fits a reading app that splits the screen into many small pieces (feed card, hero, comment row, theme toggle). When comment lists or filters change, you update state and the DOM diff stays predictable. For this project we are not asking for a second server-rendered framework—client-side React plus a clear API is enough.
+
+### Vite (frontend tooling)
+
+Vite starts fast in development and bundles efficiently for production. That keeps iteration short while you tune layout and motion. Create React App–style setups are heavier; Vite is a practical default for a Vite + React SPA.
+
+### Tailwind CSS (for styling purposes)
+
+Utility classes ensure that there is consistency in spacing, typography, and dark mode variations without creating many individual CSS files for the same purpose. When using Tailwind CSS for a blog having hero, cards grid, and typography, you would save time during layout development.
+
+### Redux Toolkit (client state)
+
+Some UI state is global: theme, saved bookmarks, and cached feed pages when the user navigates back from an article. Local `useState` alone forces prop drilling and refetching. Redux Toolkit gives a single place for that state with less boilerplate than classic Redux.
+
+### Framer Motion (animation)
+
+Scroll-linked progress and staggered cards are awkward in raw CSS alone. Framer Motion hooks into React and scroll position cleanly. We still limit animated properties to `transform` and `opacity` for performance.
+
+### Node.js + Express (API)
+
+JavaScript on the server matches the frontend language, so types and mental models stay aligned. Express is small, widely understood, and easy to mount REST routes (`GET` articles, `POST` comments). A heavier framework is unnecessary for this scope.
+
+### MongoDB (database)
+
+Articles, comments, and subscribers are document-shaped (nested tags, variable-length HTML body, timestamps). MongoDB stores that naturally. SQL would work too, but the brief standardizes on Mongoose + MongoDB for flexible content fields and quick local or Atlas hosting.
+
+---
+
+## Repository layout (why two folders)
 
 ```
 your-repo/
-  frontend/
-  backend/
+  frontend/    → browser app (React)
+  backend/     → HTTP API (Express)
 ```
 
-Do not swap frameworks unless you explain why and still meet every requirement below.
+The separation between the UI layer and the API enables the scalability of both layers separately, protects the secrets (DB URI), and follows the architecture that most production applications use. Do not combine API functionality with the React code bundle.
 
-## Backend behavior
+---
 
-**Articles**
+## Backend — endpoints and rationale
 
-- `GET` list: pagination, optional `tag` query
-- `GET` one post by `slug`, including its comments
-- `POST` seed (dev only): wipe or fill sample articles so the UI has something to show
+### Articles
 
-**Comments**
+| Endpoint | Purpose | Why designed this way |
+|----------|---------|------------------------|
+| `GET /api/articles` | List of posts, possibly tagged | No risk of loading thousands of posts at once; no need for a search system as filtering is based on tag. |
+| `GET /api/articles/:slug` | One post with comments | Slugs improve URL readability; comments are bundled to avoid extra trip during first render. |
+| `POST /api/seed` | Create test posts (development-only) | Data is needed for onboarding and demo purposes; make sure this endpoint is protected in production mode. |
 
-- `POST` to add a comment tied to an article slug
-- Throttle write traffic so one IP cannot spam the database
-- Clean user-supplied text before it is stored (XSS is not acceptable)
+### Comments
 
-**Newsletter**
+| Requirement | Why |
+|-------------|-----|
+| `POST` with `articleSlug`, `name`, `body` | Simple public comments—no login required for this brief. |
+| Rate limiting on writes | Stops bots from filling the database; read endpoints stay open. |
+| Sanitize text before save | Comment HTML must not become a stored XSS payload that runs for other readers. |
 
-- `POST` email signup with basic format checks and the same kind of write throttling
+### Newsletter
 
-Return JSON with consistent shapes. When something fails, send a useful status code and message—not a stack trace to the client.
+| Requirement | Why |
+|-------------|-----|
+| `POST` with email | Minimal signup flow. |
+| Email format validation | Rejects obvious garbage before it hits the DB. |
+| Rate limiting | Same abuse protection as comments. |
 
-## Frontend behavior
+**API responses:** use a consistent JSON shape (e.g. `success`, `articles`, `error`). On failure return an appropriate HTTP status and a short message—never raw stack traces to the browser.
 
-**Feed**
+---
 
-- Load articles from the API, show a featured hero plus a grid
-- Tag filter and page controls if the API supports them
-- Cache feed pages in Redux so going back from an article does not always refetch
+## Frontend — screens and rationale
 
-**Article**
+### Feed (home)
 
-- Full post body, metadata, comment list
-- Top progress bar driven by scroll (Framer Motion is fine)
-- Bookmark toggle stored locally
-- Comment form: add the comment to the UI immediately, then call the API; if the request fails, remove the optimistic row and tell the user
+| Behavior | Why |
+|----------|-----|
+| Featured hero + grid | First post gets emphasis; the rest scan as cards. |
+| Tag filter + pagination | Matches backend capabilities; users narrow topics without infinite scroll complexity. |
+| Redux cache per page/tag | Returning from an article should not always hit the network again. |
 
-**Theme**
+### Article (detail)
 
-- Toggle dark/light and persist the choice
+| Behavior | Why |
+|----------|-----|
+| Full HTML body + metadata | Core reading experience. |
+| Scroll progress bar (Framer Motion) | Tied to scroll position, not fake timers. |
+| Bookmarks in `localStorage` | Personal, device-local saves without building user accounts. |
+| Optimistic comments | Insert comment in UI → `POST` → on error, remove row and show message. That is the expected modern pattern for snappy forms. |
 
-Connect the application with the API by configuring the application environment variables (such as `VITE_API_URL`). This is good enough in development environments with proxies or server-side configurations for CORS.
+### Theme
 
-## How we will judge the work
+| Behavior | Why |
+|----------|-----|
+| Toggle + persist | Matches reader preference; store in `localStorage` (and Redux if you already use it for theme). |
 
-It matters to us that the app actually works after `npm install`, and a quick setup message, rather than all the files being called the same as those in the tutorials. The code needs to be clear to other developers scanning through it, such as having sensible names and small modules, without copy-and-paste sections repeating the exact same thing three times. Stick to the stack mentioned above. It is preferable to have lightweight API data returned and movement without repainting the entire page. Add comments to code where it isn’t obvious.
+### API connection
 
-## What to hand in
+Use `VITE_API_URL` (or a dev proxy) so the same frontend build can point at local or deployed APIs. Configure CORS on Express for the Vite origin in development.
 
-Provide a runnable codebase for `frontend/` and `backend/`, along with the `.env.example` files, and a brief explanation for starting MongoDB, the API, and the Vite development server. Answers with pseudocode only will not be considered correct.
+---
+
+## Security and operations (why these defaults)
+
+| Practice | Reason |
+|----------|--------|
+| `.env` for `MONGO_URI`, `PORT`, `FRONTEND_URL` | Secrets and URLs differ per machine; never commit real `.env` files. |
+| `helmet` / sensible CORS | Reduces common HTTP header issues; restrict origins in production. |
+| DOMPurify (or equivalent) on the server | Browsers trust your API; cleaning input at save time is the right layer for comment text. |
+| `express-rate-limit` on POST routes | Cheap protection against abuse on write paths. |
+
+---
+
+## What “done” looks like
+
+- `backend/` runs with `npm install` + `npm run dev`, connects to MongoDB, serves the routes above.
+- `frontend/` runs with `npm run dev`, loads the feed, opens articles, posts comments with optimistic UI, toggles theme.
+- `.env.example` in both folders documents required variables.
+- Short run instructions (MongoDB, seed, ports) so another developer is not guessing.
+
+Pseudocode-only submissions do not meet the brief. The implementation must run.
